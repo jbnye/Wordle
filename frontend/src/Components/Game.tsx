@@ -1,11 +1,11 @@
 import {useState, useEffect} from "react";
 import Rows from "./Rows";
-import Squares from "./Squares";
 import InputField from "./inputField";
 
 
 import words from '../Words/Words.txt?raw'; 
 import answers from '../Words/Answers.txt?raw';
+import Keyboard from "./keyboard";
 
 const wordsList: string[] = words.split('\n').map(word =>word.trim().toUpperCase());
 const answersList: string[] = answers.split('\n').map(answer =>answer.trim().toUpperCase());
@@ -15,9 +15,17 @@ function getCurrentAnswer(answersList: string[]): string {
     return answersList[ranIndex];
 }
 
-export default function Game(){
-    const [gameStatus, setGameStatus] = useState<"playing" | "won" | "lost">("playing");
+interface GameProps{
+    onGameOver: (result: "lost" | "won") => void;
+    gameState: "playing" | "won" | "lost"
+}
+
+
+
+export default function Game({onGameOver, gameState}: GameProps){
+
     const [currentAnswer, setCurrentAnswer] = useState(() => getCurrentAnswer(answersList));
+    const [lettersUsed, setLettersUsed] = useState<Map<string, string>>(new Map());
     const [pastGuesses, setPastGuesses] = useState<string[]>([]);
     const [letterChecks, setLetterChecks] = useState<string[][]>([]);
     const [currentGuess, setCurrentGuess] = useState<string>("");
@@ -25,9 +33,24 @@ export default function Game(){
     console.log("Current Answer is:", currentAnswer);
 
     const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === "Enter") {
-            handleGuessSubmit();
+        if(gameState === "playing"){
+            if (e.key === "Enter") {
+                handleGuessSubmit();
+            }
+            else if (e.key === "Backspace"){
+                let newCurrentGuess: string = currentGuess;
+                newCurrentGuess = newCurrentGuess.slice(0, -1);
+                setCurrentGuess(newCurrentGuess)
+            }
+            else{
+                if (/^[A-Za-z]$/.test(e.key)) {
+                    if (currentGuess.length < 5) {
+                        setCurrentGuess(prev => prev + e.key.toUpperCase());
+                    }
+                }
+            }
         }
+
     };
 
     useEffect(() => {
@@ -39,12 +62,24 @@ export default function Game(){
     };
     }, [currentGuess]); 
 
+
+    useEffect(() => {
+    // Reset game state when component mounts or gameState changes to "playing"
+    if (gameState === "playing") {
+        setCurrentAnswer(getCurrentAnswer(answersList));
+        setPastGuesses([]);
+        setLetterChecks([]);
+        setCurrentGuess("");
+    }
+    }, [gameState]);
+
+
     function handleGuessSubmit() {
         if(currentGuess.length != 5){
             return;
         }
         if(currentGuess === currentAnswer){
-            setGameStatus("won");
+            onGameOver("won"); 
             checkLetters();
             setPastGuesses([...pastGuesses, currentGuess]);
             setCurrentGuess("");
@@ -53,12 +88,12 @@ export default function Game(){
             checkLetters();
             setPastGuesses([...pastGuesses, currentGuess]);
             setCurrentGuess("");
-            if(pastGuesses.length === 5){setGameStatus("lost");}
-            //console.log("Incorrect");
+            if(pastGuesses.length === 5){onGameOver("lost");}
+            console.log("Incorrect");
 
         }
         else{
-            //console.log(`${currentGuess} is not a word.`)
+            console.log(`${currentGuess} is not a word.`)
         }
         
     }
@@ -87,6 +122,7 @@ export default function Game(){
             }
         }
         console.log(newLetterChecks);
+        keyboardLetterState(currentGuess, newLetterChecks);
         setLetterChecks([...letterChecks, newLetterChecks])
 
     }
@@ -103,11 +139,32 @@ export default function Game(){
         return letterMap;
     }
 
+    function keyboardLetterState(guess: string, letterChecks: string[]){
+        let newLettersUsed = lettersUsed;
+        for(let i=0; i<guess.length;i++){
+            if(newLettersUsed?.has(guess[i])){
+                if(newLettersUsed.get(guess[i]) === "correct"){
+
+                }
+                else if(newLettersUsed.get(guess[i]) === "wrong"){
+                    if(letterChecks[i] === "correct"){newLettersUsed.set(guess[i], letterChecks[i])}
+                }
+                else{
+                    if(letterChecks[i] === "correct"){newLettersUsed.set(guess[i], letterChecks[i])}
+                    if(letterChecks[i] === "wrong"){newLettersUsed.set(guess[i], letterChecks[i])}
+                }
+            }
+            else{
+                newLettersUsed?.set(guess[i], letterChecks[i])
+            }
+        }
+        setLettersUsed(newLettersUsed);
+    }
+
 
     return(
     <>
-    <h1 className="text-3xl font-bold text-blue-500">WORDLE</h1>
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1 items-center mb-4">
     {Array.from({length: totalRows}).map((_,i) =>(
         <Rows
         key={i}
@@ -118,17 +175,19 @@ export default function Game(){
     </div>
     
 
-    {gameStatus === "playing" ? (
-        <InputField guess={currentGuess} setGuess={setCurrentGuess}/>
-    ): gameStatus === "won" ? (
+    {gameState === "playing" ? (
+        // <InputField guess={currentGuess} setGuess={setCurrentGuess}/>
+        <></>
+    ): gameState === "won" ? (
         <div>
-            Congratulations you won!
+            Congratulations you won in {pastGuesses.length} guesses!
         </div>
     ) : (
         <div>
-            Uh OH! You have run out of attempts. Correct answer was {currentAnswer}.
+            Uh Oh! You have run out of attempts. Correct answer was {currentAnswer}.
         </div>
     )}
+    <Keyboard guess={currentGuess} letterStates={lettersUsed} setGuess={setCurrentGuess} handleGuessSubmit={handleGuessSubmit} gameState={gameState}/>
 
     </>
     );

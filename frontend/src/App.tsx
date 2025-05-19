@@ -1,11 +1,11 @@
 import './index.css'
-import Game from "./Components/Game";
+import GameWrapper from './Components/GameWrapper';
 
 function App() {
 
   return (
     <>
-      <Game />
+      <GameWrapper/>
     </>
   )
 }
