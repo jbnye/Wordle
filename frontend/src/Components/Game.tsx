@@ -25,6 +25,7 @@ interface GameProps{
 export default function Game({onGameOver, gameState}: GameProps){
 
     const [currentAnswer, setCurrentAnswer] = useState(() => getCurrentAnswer(answersList));
+    const [shakeRow, setShakeRow] = useState<boolean>(false);
     const [lettersUsed, setLettersUsed] = useState<Map<string, string>>(new Map());
     const [pastGuesses, setPastGuesses] = useState<string[]>([]);
     const [letterChecks, setLetterChecks] = useState<string[][]>([]);
@@ -94,6 +95,10 @@ export default function Game({onGameOver, gameState}: GameProps){
         }
         else{
             console.log(`${currentGuess} is not a word.`)
+            setShakeRow(true);
+            setTimeout(() => setShakeRow(false), 1000); // 500ms = animation length
+            return;
+
         }
         
     }
@@ -170,6 +175,7 @@ export default function Game({onGameOver, gameState}: GameProps){
         key={i}
         data={i < pastGuesses.length ? pastGuesses[i] : i === pastGuesses.length ? currentGuess : ""} 
         letters={i<letterChecks.length ? letterChecks[i]: []}
+        shake={i === pastGuesses.length && shakeRow}
         />
     ))}  
     </div>
