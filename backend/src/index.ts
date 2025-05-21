@@ -2,12 +2,15 @@ import express, { RequestHandler, Express, Request, Response} from 'express';
 import cors from 'cors';
 import fs from "fs";
 import path from "path";
+import dotenv from 'dotenv';
+dotenv.config();
+
 
 const app: Express = express();
 app.use(cors());
 app.use(express.json());
 
-const port = 3000; 
+const port = process.env.PORT || 3000;
 const wordsFilePath = path.join(__dirname, 'Words', 'Words.txt');
 const answersFilePath = path.join(__dirname, 'Words', 'Answers.txt');
 
@@ -34,19 +37,22 @@ try{
 
 
 interface WordRequest {
-  word?: unknown 
+  target?: unknown 
 }
 interface ApiResponse {
     success: boolean;
     message: string;
 }
+interface AnswerResponse {
+  answer: string;
+}
 
 const checkWordHandler: RequestHandler<{}, ApiResponse, WordRequest> = (req, res) => {
-  const { word } = req.body;
+  const { target } = req.body;
 
-  if (typeof word === 'string' && word.length === 5) {
-    const upperWord = word.toUpperCase();
-    const isWord = wordList.includes(upperWord);
+  if (typeof target === 'string' && target.length === 5) {
+    const upperTarget = target.toUpperCase();
+    const isWord = binarySearchWord(upperTarget);
     res.json({
       success: isWord,
       message: isWord ? 'Word exists' : 'Word not found',
@@ -59,8 +65,35 @@ const checkWordHandler: RequestHandler<{}, ApiResponse, WordRequest> = (req, res
   }
 };
 
+function binarySearchWord(target: string){
+    let left = 0, right = wordList.length;
+    while(left <= right){
+      const mid = Math.floor((left + right) / 2);
+      if(wordList[mid]===target) return true;
+      if(wordList[mid] < target) left = mid + 1;
+      else right = mid - 1;
+    }
+    left = 0, right = answerList.length;
+    while(left <= right){
+      const mid = Math.floor((left + right) / 2);
+      if(answerList[mid] === target) return true;
+      if(answerList[mid] < target) left = mid + 1;
+      else right = mid - 1;
+    }
+    return false;
+}
+
+
 app.post('/check-word', checkWordHandler);
 
+
+app.get('/get-answer', (_req: Request, res: Response<AnswerResponse>) => {
+    const randIndex = Math.floor(Math.random() * answerList.length);
+    const word = answerList[randIndex];
+    res.json({
+      answer: word
+    })
+});
 
 
 app.get('/', (_req: Request, res: Response) => {
