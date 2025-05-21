@@ -1,6 +1,7 @@
 import {useState, useEffect} from "react";
 import Rows from "./Rows";
-import InputField from "./inputField";
+//import InputField from "./inputField";
+import {fetchRandomAnswer, fetchCheckIsWord} from "../services/api";
 
 
 import words from '../Words/Words.txt?raw'; 
@@ -10,21 +11,19 @@ import Keyboard from "./keyboard";
 const wordsList: string[] = words.split('\n').map(word =>word.trim().toUpperCase());
 const answersList: string[] = answers.split('\n').map(answer =>answer.trim().toUpperCase());
 
-function getCurrentAnswer(answersList: string[]): string {
-    const ranIndex = Math.floor(Math.random() * answersList.length);
-    return answersList[ranIndex];
-}
+
 
 interface GameProps{
     onGameOver: (result: "lost" | "won") => void;
-    gameState: "playing" | "won" | "lost"
+    gameState: "playing" | "won" | "lost",
+    serverStatus: "connecting" | "online" | "offline";
 }
 
 
 
-export default function Game({onGameOver, gameState}: GameProps){
+export default function Game({onGameOver, gameState, serverStatus}: GameProps){
 
-    const [currentAnswer, setCurrentAnswer] = useState(() => getCurrentAnswer(answersList));
+    const [currentAnswer, setCurrentAnswer] = useState<string>("");
     const [shakeRow, setShakeRow] = useState<boolean>(false);
     const [lettersUsed, setLettersUsed] = useState<Map<string, string>>(new Map());
     const [pastGuesses, setPastGuesses] = useState<string[]>([]);
@@ -32,6 +31,47 @@ export default function Game({onGameOver, gameState}: GameProps){
     const [currentGuess, setCurrentGuess] = useState<string>("");
     const totalRows = 6;
     console.log("Current Answer is:", currentAnswer);
+    console.log("Server status is" , serverStatus);
+
+    useEffect(()=> {
+        let isMounted = true;
+        const abortController = new AbortController();
+        async function initializeRandomAnswer() {
+            try {
+                if (serverStatus === "online") {
+                    const response = await fetchRandomAnswer(abortController.signal);
+                    if (isMounted) setCurrentAnswer(response.answer);
+                } else {
+                    if (isMounted) {
+                        const word = getLocalAnswer(answersList);
+                        console.log("Local answer selected:", word);
+                        setCurrentAnswer(word);
+                    }
+                }
+            } catch (error) {
+                console.log("SERVER IS NOT ONLINE IN CATCH BRANCH");
+                if (!isMounted) return;
+                if (error instanceof Error && error.name !== 'AbortError') {
+                    console.error("Failed to load answer:", error);
+                    if (isMounted){
+                        const word = getLocalAnswer(answersList);
+                        console.log("Local word recieved is:", word);
+                        setCurrentAnswer(word);
+                    }
+                }
+            }
+        }
+        function getLocalAnswer(answersList: string[]): string {
+            const ranIndex = Math.floor(Math.random() * answersList.length);
+            return answersList[ranIndex];
+        }
+        initializeRandomAnswer();
+
+        return () => {
+            isMounted = false;
+            abortController.abort();
+        }
+    },[serverStatus]);
 
     const handleKeyDown = (e: KeyboardEvent) => {
         if(gameState === "playing"){
@@ -54,6 +94,8 @@ export default function Game({onGameOver, gameState}: GameProps){
 
     };
 
+
+
     useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
     console.log("Listeneing for Enter");
@@ -67,7 +109,7 @@ export default function Game({onGameOver, gameState}: GameProps){
     useEffect(() => {
     // Reset game state when component mounts or gameState changes to "playing"
     if (gameState === "playing") {
-        setCurrentAnswer(getCurrentAnswer(answersList));
+        // setCurrentAnswer("");
         setPastGuesses([]);
         setLetterChecks([]);
         setCurrentGuess("");
@@ -75,33 +117,47 @@ export default function Game({onGameOver, gameState}: GameProps){
     }, [gameState]);
 
 
-    function handleGuessSubmit() {
-        if(currentGuess.length != 5){
-            return;
-        }
+    async function handleGuessSubmit(){
+        const abortController = new AbortController();
+        if(currentGuess.length !== 5) return;
         if(currentGuess === currentAnswer){
-            onGameOver("won"); 
+            onGameOver("won");
             checkLetters();
             setPastGuesses([...pastGuesses, currentGuess]);
             setCurrentGuess("");
-        }
-        //wordsList.includes(currentGuess) || answersList.includes(currentGuess)
-        else if(binarySearchWord(currentGuess) || binarySearchWord(currentGuess)){
-            checkLetters();
-            setPastGuesses([...pastGuesses, currentGuess]);
-            setCurrentGuess("");
-            if(pastGuesses.length === 5){onGameOver("lost");}
-            console.log("Incorrect");
-
-        }
-        else{
-            console.log(`${currentGuess} is not a word.`)
-            setShakeRow(true);
-            setTimeout(() => setShakeRow(false), 1000); // 500ms = animation length
             return;
-
         }
-        
+        let isWord: boolean = false;
+
+        if(serverStatus==="online"){
+            try{
+                const response = await fetchCheckIsWord(currentGuess, abortController.signal);
+                isWord = response.success;
+            } catch(error){
+                if (error instanceof Error && error.name !== 'AbortError') {
+                    console.error("Error checking word with server, falling back to offline:", error);
+                    isWord = binarySearchWord(currentGuess); // offline fallback
+                }
+            }
+            finally {
+                abortController.abort(); // Clean up
+            }
+        }
+        else {
+            isWord = binarySearchWord(currentGuess); // offline
+        }
+
+        if (isWord) {
+            checkLetters();
+            setPastGuesses([...pastGuesses, currentGuess]);
+            setCurrentGuess("");
+
+            if (pastGuesses.length === 5) onGameOver("lost");
+        } else {
+            console.log(`${currentGuess} is not a word.`);
+            setShakeRow(true);
+            setTimeout(() => setShakeRow(false), 1000);
+        }
     }
 
     function checkLetters() {
