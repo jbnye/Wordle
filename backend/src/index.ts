@@ -48,11 +48,12 @@ interface AnswerResponse {
 }
 
 const checkWordHandler: RequestHandler<{}, ApiResponse, WordRequest> = (req, res) => {
+  console.log("Received body:", req.body);
   const { target } = req.body;
 
   if (typeof target === 'string' && target.length === 5) {
     const upperTarget = target.toUpperCase();
-    const isWord = binarySearchWord(upperTarget);
+    const isWord: boolean = binarySearchWord(upperTarget);
     res.json({
       success: isWord,
       message: isWord ? 'Word exists' : 'Word not found',
@@ -82,12 +83,16 @@ function binarySearchWord(target: string){
     }
     return false;
 }
-
+app.get('/ping', (req, res) => {
+  console.log("pinging server");
+  res.send('pong'); // Simple response
+});
 
 app.post('/check-word', checkWordHandler);
 
 
 app.get('/get-answer', (_req: Request, res: Response<AnswerResponse>) => {
+    console.log("recieved answer request");
     const randIndex = Math.floor(Math.random() * answerList.length);
     const word = answerList[randIndex];
     res.json({
