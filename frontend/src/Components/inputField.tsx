@@ -17,9 +17,10 @@ const  handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
 return (
 
-    <input type="text" value = {guess} onChange={handleChange} maxLength={5} className="border-2 border-gray-400 p-2 text-xl  uppercase">
-    
-    </input>
+    <div>
+        <input type="text" value = {guess} onChange={handleChange} maxLength={5} className="border-2 border-gray-400 p-2 text-xl  uppercase">
+        </input>
+    </div>
 
 );
 
