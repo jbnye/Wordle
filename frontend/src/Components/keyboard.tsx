@@ -101,6 +101,7 @@ export default function Keyboard({guess, letterStates, setGuess, handleGuessSubm
         {Array.from(keyboardBottomRow).map((letter) => (
           <button
             key={letter}
+            onClick={handleLetterClick}
             className={`
                 w-8 h-12 sm:w-10 sm:h-14
                 flex items-center justify-center

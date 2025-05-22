@@ -85,7 +85,8 @@ export default function Game({onGameOver, gameState}: GameProps){
             setPastGuesses([...pastGuesses, currentGuess]);
             setCurrentGuess("");
         }
-        else if(wordsList.includes(currentGuess) || answersList.includes(currentGuess)){
+        //wordsList.includes(currentGuess) || answersList.includes(currentGuess)
+        else if(binarySearchWord(currentGuess) || binarySearchWord(currentGuess)){
             checkLetters();
             setPastGuesses([...pastGuesses, currentGuess]);
             setCurrentGuess("");
@@ -164,6 +165,23 @@ export default function Game({onGameOver, gameState}: GameProps){
             }
         }
         setLettersUsed(newLettersUsed);
+    }
+    function binarySearchWord(target: string){
+        let left = 0, right = wordsList.length -1;
+        while(left <= right){
+            const mid = Math.floor((left+right) / 2);
+            if(wordsList[mid] === target) return true;
+            if(wordsList[mid] < target) left = mid + 1;
+            else right = mid -1;
+        }
+        left = 0, right = answersList.length - 1;
+        while(left <= right){
+            const mid = Math.floor((left + right) /2);
+            if(answersList[mid] === target) return true;
+            if(answersList[mid] < target) left = mid + 1;
+            else right = mid -1;
+        }
+        return false;
     }
 
 
