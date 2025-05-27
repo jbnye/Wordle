@@ -29,6 +29,7 @@ export default function Game({onGameOver, gameState, serverStatus}: GameProps){
     const [pastGuesses, setPastGuesses] = useState<string[]>([]);
     const [letterChecks, setLetterChecks] = useState<string[][]>([]);
     const [currentGuess, setCurrentGuess] = useState<string>("");
+    const [submitError, setSubmitError] = useState<"noLetters" | "notWord" | null> (null);
     const totalRows = 6;
     console.log("Current Answer is:", currentAnswer);
     console.log("Server status is" , serverStatus);
@@ -95,7 +96,6 @@ export default function Game({onGameOver, gameState, serverStatus}: GameProps){
     };
 
 
-
     useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
     console.log("Listeneing for Enter");
@@ -119,7 +119,11 @@ export default function Game({onGameOver, gameState, serverStatus}: GameProps){
 
     async function handleGuessSubmit(){
         const abortController = new AbortController();
-        if(currentGuess.length !== 5) return;
+        if(currentGuess.length !== 5){
+            setSubmitError("noLetters");
+            setTimeout(() => setSubmitError(null), 1000);
+            return;
+        }
         if(currentGuess === currentAnswer){
             onGameOver("won");
             checkLetters();
@@ -157,6 +161,8 @@ export default function Game({onGameOver, gameState, serverStatus}: GameProps){
             console.log(`${currentGuess} is not a word.`);
             setShakeRow(true);
             setTimeout(() => setShakeRow(false), 1000);
+            setSubmitError("notWord");
+            setTimeout(() => setSubmitError(null), 1000)
         }
     }
 
@@ -243,6 +249,14 @@ export default function Game({onGameOver, gameState, serverStatus}: GameProps){
 
     return(
     <>
+    <div className="h-[40px] flex items-center justify-center m-1">
+    {submitError && (
+        <div className="bg-black text-white rounded-md px-4 py-2">
+        {submitError === "noLetters" ? "Not enough letters" : "Not in word list"}
+        </div>
+    )}
+    </div>
+
     <div className="flex flex-col gap-1 items-center mb-4">
     {Array.from({length: totalRows}).map((_,i) =>(
         <Rows
