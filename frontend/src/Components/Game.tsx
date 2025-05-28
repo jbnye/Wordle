@@ -30,6 +30,7 @@ export default function Game({onGameOver, gameState, serverStatus}: GameProps){
     const [letterChecks, setLetterChecks] = useState<string[][]>([]);
     const [currentGuess, setCurrentGuess] = useState<string>("");
     const [submitError, setSubmitError] = useState<"noLetters" | "notWord" | null> (null);
+    const [flipTrigger, setFlipTrigger] = useState<boolean>(false);
     const totalRows = 6;
     console.log("Current Answer is:", currentAnswer);
     console.log("Server status is" , serverStatus);
@@ -74,10 +75,13 @@ export default function Game({onGameOver, gameState, serverStatus}: GameProps){
         }
     },[serverStatus]);
 
+
     const handleKeyDown = (e: KeyboardEvent) => {
         if(gameState === "playing"){
             if (e.key === "Enter") {
+                if(flipTrigger === false){
                 handleGuessSubmit();
+                }
             }
             else if (e.key === "Backspace"){
                 let newCurrentGuess: string = currentGuess;
@@ -95,7 +99,6 @@ export default function Game({onGameOver, gameState, serverStatus}: GameProps){
 
     };
 
-
     useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
     console.log("Listeneing for Enter");
@@ -107,7 +110,6 @@ export default function Game({onGameOver, gameState, serverStatus}: GameProps){
 
 
     useEffect(() => {
-    // Reset game state when component mounts or gameState changes to "playing"
     if (gameState === "playing") {
         // setCurrentAnswer("");
         setPastGuesses([]);
@@ -119,14 +121,23 @@ export default function Game({onGameOver, gameState, serverStatus}: GameProps){
 
     async function handleGuessSubmit(){
         const abortController = new AbortController();
+        if(flipTrigger === true){
+            return;
+        }
         if(currentGuess.length !== 5){
             setSubmitError("noLetters");
             setTimeout(() => setSubmitError(null), 1000);
             return;
         }
         if(currentGuess === currentAnswer){
-            onGameOver("won");
-            checkLetters();
+            const newLetterChecks = checkLetters();
+            setFlipTrigger(true);
+            setLetterChecks([...letterChecks, newLetterChecks]);
+            setTimeout(() => {
+                setFlipTrigger(false);
+                keyboardLetterState(currentGuess, newLetterChecks);
+                onGameOver("won");
+            }, 2500); 
             setPastGuesses([...pastGuesses, currentGuess]);
             setCurrentGuess("");
             return;
@@ -152,11 +163,16 @@ export default function Game({onGameOver, gameState, serverStatus}: GameProps){
         }
 
         if (isWord) {
-            checkLetters();
-            setPastGuesses([...pastGuesses, currentGuess]);
-            setCurrentGuess("");
-
-            if (pastGuesses.length === 5) onGameOver("lost");
+        const newLetterChecks = checkLetters();
+        setLetterChecks([...letterChecks, newLetterChecks]);
+        setFlipTrigger(true);
+        setTimeout(() => {
+            setFlipTrigger(false);
+            keyboardLetterState(currentGuess, newLetterChecks);
+        }, 2500); 
+        setPastGuesses([...pastGuesses, currentGuess]);
+        setCurrentGuess("");
+        if (pastGuesses.length === 5) onGameOver("lost");
         } else {
             console.log(`${currentGuess} is not a word.`);
             setShakeRow(true);
@@ -166,47 +182,32 @@ export default function Game({onGameOver, gameState, serverStatus}: GameProps){
         }
     }
 
-    function checkLetters() {
-        let letterMap:Map<string, number[]>  = buildMap();
-        const availableIndices = new Map<string, number[]>(letterMap);
-        let newLetterChecks: string[]  = [];
 
-        for (let i = 0; i < currentGuess.length; i++) {
-            const letter = currentGuess[i];
-            const indices = availableIndices.get(letter);
+    function checkLetters(): string[] {
+        const newLetterChecks: string[] = Array(5).fill("absent");
+        const answerChars = currentAnswer.split('');
+        const guessChars = currentGuess.split('');
+        const letterFreq: Record<string, number> = {};
 
-            if (!indices) {
-            newLetterChecks[i] = "absent";
-            continue;
-            }
-
-            const indexPos = indices.indexOf(i);
-            if (indexPos !== -1) {
+        for (let i = 0; i < 5; i++) {
+            if (guessChars[i] === answerChars[i]) {
             newLetterChecks[i] = "correct";
-            indices.splice(indexPos, 1);
             } else {
-            newLetterChecks[i] = indices.length > 0 ? "wrong" : "absent";
-            if (indices.length > 0) indices.shift();
+            const char = answerChars[i];
+            letterFreq[char] = (letterFreq[char] || 0) + 1;
             }
         }
-        console.log(newLetterChecks);
-        keyboardLetterState(currentGuess, newLetterChecks);
-        setLetterChecks([...letterChecks, newLetterChecks])
 
-    }
-
-    function buildMap():Map<string, number[]> {
-        const letterMap = new Map<string, number[]>();
-        for(let i = 0; i < currentAnswer.length; i++){
-            const letter = currentAnswer[i];
-            if(!letterMap.has(letter)){
-                letterMap.set(letter,[])
+        for (let i = 0; i < 5; i++) {
+            if (newLetterChecks[i] === "correct") continue;
+            const char = guessChars[i];
+            if (letterFreq[char]) {
+            newLetterChecks[i] = "wrong";
+            letterFreq[char]--;
             }
-            (letterMap.get((letter)) || []).push(i)
         }
-        return letterMap;
+        return newLetterChecks;
     }
-
     function keyboardLetterState(guess: string, letterChecks: string[]){
         let newLettersUsed = lettersUsed;
         for(let i=0; i<guess.length;i++){
@@ -228,6 +229,8 @@ export default function Game({onGameOver, gameState, serverStatus}: GameProps){
         }
         setLettersUsed(newLettersUsed);
     }
+
+
     function binarySearchWord(target: string){
         let left = 0, right = wordsList.length -1;
         while(left <= right){
@@ -264,6 +267,7 @@ export default function Game({onGameOver, gameState, serverStatus}: GameProps){
         data={i < pastGuesses.length ? pastGuesses[i] : i === pastGuesses.length ? currentGuess : ""} 
         letters={i<letterChecks.length ? letterChecks[i]: []}
         shake={i === pastGuesses.length && shakeRow}
+        flipTrigger={i === pastGuesses.length - 1 && flipTrigger}
         />
     ))}  
     </div>
