@@ -10,12 +10,14 @@ interface KeyboardProps {
   setGuess: (guess: string) => void,
   handleGuessSubmit: () => void,
   gameState: string
+  flipTrigger: boolean
 }
 
-export default function Keyboard({guess, letterStates, setGuess, handleGuessSubmit, gameState}: KeyboardProps){
+export default function Keyboard({guess, letterStates, setGuess, handleGuessSubmit, gameState, flipTrigger}: KeyboardProps){
 
 
   function handleLetterClick(e: React.MouseEvent<HTMLButtonElement>){
+    if(flipTrigger === true || gameState !== "playing") return; 
     const buttonValue = e.currentTarget.textContent;
     console.log(buttonValue);
     if(gameState==="playing"){
