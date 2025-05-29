@@ -18,7 +18,7 @@ export default function PlayAgainButton({handlePlayAgain}: PlayAgainButtonProps)
                 transition-colors duration-100 
                 hover:bg-[rgb(100,104,106)]    
                 active:bg-[rgb(57, 60, 61)]      
-                active:scale-95                 
+                active:scale-95               
             "
     >
       Play Again

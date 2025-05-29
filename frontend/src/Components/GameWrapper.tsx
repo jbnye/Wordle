@@ -48,11 +48,13 @@ useEffect(() => {
 }, []); 
 
     function handleGameOver(result: "won" | "lost") {
-        setGameState(result);
-        setWinloss(prev => ({
-            wins: result === "won" ? prev.wins + 1 : prev.wins,
-            losses: result === "lost" ? prev.losses + 1 : prev.losses
-        }));
+        setTimeout(() => {
+            setGameState(result);
+            setWinloss(prev => ({
+                wins: result === "won" ? prev.wins + 1 : prev.wins,
+                losses: result === "lost" ? prev.losses + 1 : prev.losses
+            }));
+        }, 2500);
     }
 
     function handlePlayAgain() {

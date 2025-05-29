@@ -77,36 +77,34 @@ export default function Game({onGameOver, gameState, serverStatus}: GameProps){
 
 
     const handleKeyDown = (e: KeyboardEvent) => {
-        if(gameState === "playing"){
-            if (e.key === "Enter") {
-                if(flipTrigger === false){
-                handleGuessSubmit();
-                }
-            }
-            else if (e.key === "Backspace"){
-                let newCurrentGuess: string = currentGuess;
-                newCurrentGuess = newCurrentGuess.slice(0, -1);
-                setCurrentGuess(newCurrentGuess)
-            }
-            else{
-                if (/^[A-Za-z]$/.test(e.key)) {
-                    if (currentGuess.length < 5) {
-                        setCurrentGuess(prev => prev + e.key.toUpperCase());
-                    }
+        if(gameState !== "playing" || flipTrigger === true) return;
+        if (e.key === "Enter") {
+            handleGuessSubmit();
+        }
+        else if (e.key === "Backspace"){
+            let newCurrentGuess: string = currentGuess;
+            newCurrentGuess = newCurrentGuess.slice(0, -1);
+            setCurrentGuess(newCurrentGuess)
+        }
+        else{
+            if (/^[A-Za-z]$/.test(e.key)) {
+                if (currentGuess.length < 5) {
+                    setCurrentGuess(prev => prev + e.key.toUpperCase());
                 }
             }
         }
-
     };
 
     useEffect(() => {
-    window.addEventListener("keydown", handleKeyDown);
-    console.log("Listeneing for Enter");
-    return () => {
-        window.removeEventListener("keydown", handleKeyDown);
-        console.log("Removing Enter Listener");
-    };
-    }, [currentGuess]); 
+        if(flipTrigger === false  || gameState === "playing"){
+            window.addEventListener("keydown", handleKeyDown);
+            console.log("Listeneing for Enter");
+            return () => {
+                window.removeEventListener("keydown", handleKeyDown);
+                console.log("Removing Enter Listener");
+            };
+        }
+    }, [currentGuess, flipTrigger, gameState]); 
 
 
     useEffect(() => {
@@ -136,10 +134,10 @@ export default function Game({onGameOver, gameState, serverStatus}: GameProps){
             setTimeout(() => {
                 setFlipTrigger(false);
                 keyboardLetterState(currentGuess, newLetterChecks);
-                onGameOver("won");
             }, 2500); 
             setPastGuesses([...pastGuesses, currentGuess]);
             setCurrentGuess("");
+            onGameOver("won");
             return;
         }
         let isWord: boolean = false;
@@ -277,15 +275,15 @@ export default function Game({onGameOver, gameState, serverStatus}: GameProps){
         // <InputField guess={currentGuess} setGuess={setCurrentGuess}/>
         <></>
     ): gameState === "won" ? (
-        <div>
-            Congratulations you won in {pastGuesses.length} guesses!
+        <div className="bg-green-100 border border-green-400 text-green-800 px-4 py-3 rounded shadow animate-bounce text-center font-bold text-lg m-2">
+        🎉 Congratulations! You won in {pastGuesses.length} guesses!
         </div>
     ) : (
-        <div>
-            Uh Oh! You have run out of attempts. Correct answer was {currentAnswer}.
+        <div className="bg-red-100 border border-red-400 text-red-800 px-4 py-3 rounded shadow text-center font-bold text-lg mb-2">
+        😞 Out of attempts! The correct word was <span className="underline">{currentAnswer}</span>.
         </div>
     )}
-    <Keyboard guess={currentGuess} letterStates={lettersUsed} setGuess={setCurrentGuess} handleGuessSubmit={handleGuessSubmit} gameState={gameState}/>
+    <Keyboard guess={currentGuess} letterStates={lettersUsed} setGuess={setCurrentGuess} handleGuessSubmit={handleGuessSubmit} gameState={gameState} flipTrigger={flipTrigger}/>
 
     </>
     );
