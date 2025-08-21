@@ -11,6 +11,9 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true
   },
+  "scripts": {
+  "build": "tsc && cpx \"src/Words/**/*\" dist/Words"
+  },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }
