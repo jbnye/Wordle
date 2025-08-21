@@ -48,7 +48,7 @@ export default function Keyboard({guess, letterStates, setGuess, handleGuessSubm
             case "correct": return "bg-[rgb(106,170,100)] text-white";
             case "wrong": return "bg-[rgb(201,180,88)] text-white";
             case "absent": return "bg-[rgb(120,124,126)] text-white";
-            default: return "bg-gray-300 dark:bg-gray-600";
+            default: return "bg-gray-300 ";
         }
     };
 
@@ -97,7 +97,7 @@ export default function Keyboard({guess, letterStates, setGuess, handleGuessSubm
       
       {/* Bottom Row */}
       <div className="flex gap-1">
-        <button onClick={handleGuessSubmit} className=" cursor-pointer w-12 h-12 sm:w-16 sm:h-14 bg-gray-200 bg-gray-300 dark:bg-gray-600 rounded-md flex items-center justify-center text-xs font-bold">
+        <button onClick={handleGuessSubmit} className=" cursor-pointer w-12 h-12 sm:w-16 sm:h-14 bg-gray-300 rounded-md flex items-center justify-center text-xs font-bold">
           ENTER
         </button>
         {Array.from(keyboardBottomRow).map((letter) => (
@@ -116,7 +116,7 @@ export default function Keyboard({guess, letterStates, setGuess, handleGuessSubm
             {letter}
           </button>
         ))}
-        <button onClick={handleLetterClick} className="cursor-pointer w-12 h-12 sm:w-16 sm:h-14 bg-gray-200 bg-gray-300 dark:bg-gray-600 rounded-md flex items-center justify-center text-xs font-bold">
+        <button onClick={handleLetterClick} className="cursor-pointer w-12 h-12 sm:w-16 sm:h-14 bg-gray-300  rounded-md flex items-center justify-center text-xs font-bold">
           ⌫
         </button>
       </div>

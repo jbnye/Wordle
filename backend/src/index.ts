@@ -7,7 +7,12 @@ dotenv.config();
 
 
 const app: Express = express();
-app.use(cors());
+app.use(cors(
+  {
+    origin: process.env.FRONTEND_URL || "htpp://localhostL5173",
+    credentials: true,
+  }
+));
 app.use(express.json());
 
 const port = process.env.PORT || 3000;
@@ -83,15 +88,15 @@ function binarySearchWord(target: string){
     }
     return false;
 }
-app.get('/ping', (req, res) => {
+app.get('/api/ping', (req, res) => {
   console.log("pinging server");
   res.send('pong'); // Simple response
 });
 
-app.post('/check-word', checkWordHandler);
+app.post('/api/check-word', checkWordHandler);
 
 
-app.get('/get-answer', (_req: Request, res: Response<AnswerResponse>) => {
+app.get('/api/get-answer', (_req: Request, res: Response<AnswerResponse>) => {
     console.log("recieved answer request");
     const randIndex = Math.floor(Math.random() * answerList.length);
     const word = answerList[randIndex];

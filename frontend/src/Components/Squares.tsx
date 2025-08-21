@@ -26,9 +26,7 @@ export default function Squares({ value, status, delay = 0, flipTrigger, index }
     setFrontRotation(0);
     setBackRotation(90);
 
-    // Calculate individual delay based on square position
     const individualDelay = delay + (index * 100); // 100ms between each square
-
     const startTimer = setTimeout(() => {
       // Front face rotation (0° → 90°)
       const frontAnimation = setInterval(() => {
@@ -40,9 +38,8 @@ export default function Squares({ value, status, delay = 0, flipTrigger, index }
           }
           return newRotation;
         });
-      }, 300/9);
+      }, 220/9);
 
-      // Back face rotation starts AFTER front completes
       const backAnimationDelay = setTimeout(() => {
         const backAnimation = setInterval(() => {
           setBackRotation(prev => {
@@ -54,8 +51,8 @@ export default function Squares({ value, status, delay = 0, flipTrigger, index }
             }
             return newRotation;
           });
-        }, 300/9);
-      }, 300);
+        }, 220/9);
+      }, 220);
 
       return () => {
         clearInterval(frontAnimation);

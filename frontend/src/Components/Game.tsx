@@ -275,7 +275,7 @@ export default function Game({onGameOver, gameState, serverStatus}: GameProps){
         // <InputField guess={currentGuess} setGuess={setCurrentGuess}/>
         <></>
     ): gameState === "won" ? (
-        <div className="bg-green-100 border border-green-400 text-green-800 px-4 py-3 rounded shadow animate-bounce text-center font-bold text-lg m-2">
+        <div className="bg-green-100 border border-green-400 text-green-800 px-4 py-3 rounded shadow  text-center font-bold text-lg m-2">
         🎉 Congratulations! You won in {pastGuesses.length} guesses!
         </div>
     ) : (
