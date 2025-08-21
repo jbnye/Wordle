@@ -19,7 +19,7 @@ export default function Keyboard({guess, letterStates, setGuess, handleGuessSubm
   function handleLetterClick(e: React.MouseEvent<HTMLButtonElement>){
     if(flipTrigger === true || gameState !== "playing") return; 
     const buttonValue = e.currentTarget.textContent;
-    console.log(buttonValue);
+    //console.log(buttonValue);
     if(gameState==="playing"){
       if (!buttonValue) return;
       if (buttonValue === "ENTER") {

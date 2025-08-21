@@ -32,8 +32,8 @@ export default function Game({onGameOver, gameState, serverStatus}: GameProps){
     const [submitError, setSubmitError] = useState<"noLetters" | "notWord" | null> (null);
     const [flipTrigger, setFlipTrigger] = useState<boolean>(false);
     const totalRows = 6;
-    console.log("Current Answer is:", currentAnswer);
-    console.log("Server status is" , serverStatus);
+    //console.log("Current Answer is:", currentAnswer);
+    //console.log("Server status is" , serverStatus);
 
     useEffect(()=> {
         let isMounted = true;
@@ -46,18 +46,18 @@ export default function Game({onGameOver, gameState, serverStatus}: GameProps){
                 } else {
                     if (isMounted) {
                         const word = getLocalAnswer(answersList);
-                        console.log("Local answer selected:", word);
+                       //console.log("Local answer selected:", word);
                         setCurrentAnswer(word);
                     }
                 }
             } catch (error) {
-                console.log("SERVER IS NOT ONLINE IN CATCH BRANCH");
+                //console.log("SERVER IS NOT ONLINE IN CATCH BRANCH");
                 if (!isMounted) return;
                 if (error instanceof Error && error.name !== 'AbortError') {
                     console.error("Failed to load answer:", error);
                     if (isMounted){
                         const word = getLocalAnswer(answersList);
-                        console.log("Local word recieved is:", word);
+                        //console.log("Local word recieved is:", word);
                         setCurrentAnswer(word);
                     }
                 }
@@ -98,10 +98,10 @@ export default function Game({onGameOver, gameState, serverStatus}: GameProps){
     useEffect(() => {
         if(flipTrigger === false  || gameState === "playing"){
             window.addEventListener("keydown", handleKeyDown);
-            console.log("Listeneing for Enter");
+            //console.log("Listeneing for Enter");
             return () => {
                 window.removeEventListener("keydown", handleKeyDown);
-                console.log("Removing Enter Listener");
+                //console.log("Removing Enter Listener");
             };
         }
     }, [currentGuess, flipTrigger, gameState]); 
@@ -172,7 +172,7 @@ export default function Game({onGameOver, gameState, serverStatus}: GameProps){
         setCurrentGuess("");
         if (pastGuesses.length === 5) onGameOver("lost");
         } else {
-            console.log(`${currentGuess} is not a word.`);
+            //console.log(`${currentGuess} is not a word.`);
             setShakeRow(true);
             setTimeout(() => setShakeRow(false), 1000);
             setSubmitError("notWord");
